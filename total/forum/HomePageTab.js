@@ -30,7 +30,7 @@ class Home extends React.Component {
 		let timeThreshold = new Promise((resolve, reject) => {
 			setTimeout(() => {
 				reject(2);
-			}, 1000);  //设置10s的超时阈值
+			}, 5000);  //设置10s的超时阈值
 		});
 
 		let errDetect = 0;
@@ -55,7 +55,9 @@ class Home extends React.Component {
 			let pageLimit = 10; //设置一页显示的条目数
 			let rowData = [];
 
-			rowData = await this._getData(this.state.selectMode, pageLimit);
+			if(page <= 10){
+				rowData = await this._getData(this.state.selectMode, pageLimit);
+			}
 			//开始提取数据
 			console.log(`数据获取完毕-${page}`);
 			console.log(rowData);
