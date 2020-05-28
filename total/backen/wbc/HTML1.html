@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>菜鸟教程(runoob.com)</title>
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+    </script>
+    <script>
+$.ajax({
+    type: 'post',
+    dataType: 'json',
+    url: 'http://localhost:8081',
+    data: {
+        name:'',
+        gongzi: '20000'
+    },
+    success: function (data) {
+        console.log(data);
+    },
+    error: function (data) {
+        console.log(data);
+    }
+})
+        $.ajax({
+    type: 'get',
+    dataType: 'json',
+    url: 'http://localhost:8081/index',
+    data: {
+        name: 'zhanghao',
+        gongzi: '20000'
+    },
+    success: function (data) {
+        console.log(data);
+    },
+    error: function (data) {
+        console.log(data);
+    }
+})
+
+    </script>
+</head>
+<body>
+    <p>如果你点我，我就会消失。</p>
+    <p>继续点我!</p>
+    <p>接着点我!</p>
+</body>
+</html>
