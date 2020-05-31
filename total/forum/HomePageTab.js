@@ -109,23 +109,23 @@ class Home extends React.Component {
 	_renderItem = (item, index) => {
 		return (
 			<TouchableOpacity
-				onPress={(event) => { this.props.navigation.navigate('PostDetail', { post_id: item.post_id }) }}
+				onPress={(event) => { this.props.navigation.navigate('PostDetail', { post_id: item.id }) }}
 				activeOpacity={0.7}
 			>
 				<View style={styles.post}>
 					<Text style={styles.postHeader}>
-						{`#${item.post_type}# ${item.post_title}`}
+						{`#${item.type==0?'水贴':'公告'}# ${item.title}`}
 					</Text>
 					<Text style={styles.postDate}>
-						{this._formatDateString(item.time_stamp)}
+						{this._formatDateString(item.update_date)}
 					</Text>
 					<Text style={styles.postContent}>
-						<Text style={styles.poster}>{`${item.user_name}:`}</Text>
+						<Text style={styles.poster}>{`${item.user_id}:`}</Text>
 						{item.content}
 					</Text>
 					<View style={styles.postView}>
 						<Feather name='eye' color='black' size={styles.postView.height - 5} />
-						<Text style={{ height: styles.postView.height, paddingLeft: 5, fontSize: styles.postView.height - 5 }}>{item.views}</Text>
+						<Text style={{ height: styles.postView.height, paddingLeft: 5, fontSize: styles.postView.height - 5 }}>{item.view_num}</Text>
 					</View>
 				</View>
 			</TouchableOpacity>
