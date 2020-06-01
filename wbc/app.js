@@ -5,15 +5,15 @@ var bodyParser = require('body-parser');
 var moment = require('moment');
 moment.locale('zh-cn');
 
-/*var connection = mysql.createConnection({
-    host: 'localhost',
+var connection = mysql.createConnection({
+    host: '127.0.0.1',
     user: 'root',
     password: '123456',
     port: '3306',
-    database: 'test'
-});*/
+    database: 'forum'
+});
 //链接数据库
-//connection.connect();
+connection.connect();
 var app = express();
 app.all('*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -37,10 +37,10 @@ app.post('/forum/post/create', function createPost(req, res) {
     var getObj = req.body;
     var postTime = moment();
     var postIdArr = [postTime.format('YYYYMMDDHHmmss'), getObj.user_id];
-    var postId = postIdArr.join();
-    var addSql = 'INSERT INTO postDetail(post_id,title, type, user_id, user_name, content, view_num, reply_num, favor_num,dislike_num,floor_num,time_stamp) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)';
+    var id = postIdArr.join();
+    var addSql = 'INSERT INTO post(id,title, type, user_id,user_name content, view_num, reply_num,floor_num,favor_num) VALUES(?,?,?,?,?,?,?,?)';
     var addSqlParams = [
-        postId,
+        id,
         getObj.post_title,
         getObj.post_type,
         getObj.user_id,
@@ -48,10 +48,7 @@ app.post('/forum/post/create', function createPost(req, res) {
         getObj.post_content,
         0,
         0,
-        0,
-        0,
-        0,
-        postTime.format('YYYY-MM-DD HH:mm:ss')];
+        0,];
     connection.query(addSql, addSqlParams, function (err, result) {
         if (err) {
             console.log('Insert Error ', err.message);
@@ -64,7 +61,7 @@ app.post('/forum/post/create', function createPost(req, res) {
             console.log('Insert Success');
             res.json(
                 {
-                    state: 'Y', post_id: postId
+                    state: 'Y', post_id: id
                 });
         }
     })
@@ -73,9 +70,9 @@ app.post('/forum/post/create', function createPost(req, res) {
 //删除帖子请求
 app.post('/forum/post/delete', function deletePost(req, res) {
     var getObj = req.body;
-    var delSql = 'DELETE FROM postDetail WHERE post_id = ?';
+    var delSql = 'DELETE FROM post WHERE id = ?';
     var delSqlParams = [
-        getObj.post_id,
+        getObj.id,
         ];
     connection.query(delSql, delSqlParams, function (err, result) {
         if (err) {
@@ -110,9 +107,9 @@ app.post('/forum/reply/create', function createPost(req, res) {
     var getObj = req.body;
     var postTime = moment();
     var floor ;
-    var sltSql = 'SELECT floor_num FROM postDetail WHERE post_id =?';
+    var sltSql = 'SELECT floor_num FROM post WHERE id =?';
     var sltSqlParams = [
-        getObj.post_id
+        getObj.id
     ];
     connection.query(sltSql, sltSqlParams, function (err, result) {
         if (err) {
@@ -125,8 +122,9 @@ app.post('/forum/reply/create', function createPost(req, res) {
             floor = result.floor_num+1;
         }
     })
-
-    var updSql = 'UPDATE postDetail SET floor_num=floor_num+1,reply_num=reply_num+1';
+    var replyIdArr = [getObj.post_id, floor];
+    var id = replyIdArr.join();
+    var updSql = 'UPDATE post SET floor_num=floor_num+1,reply_num=reply_num+1';
     connection.query(updSql, function (err, result) {
         if (err) {
             res.json(
@@ -137,15 +135,16 @@ app.post('/forum/reply/create', function createPost(req, res) {
     })
 
 
-    var addSql = 'INSERT INTO reply(floor_num, post_id, reply_content, reply_layer, user_id, user_name, time_stamp) VALUES(?,?,?,?,?,?)';
+    var addSql = 'INSERT INTO reply(id, post_id, user_id,user_name,level,is_reference,reference_id,content) VALUES(?,?,?,?,?,?,?,?)';
     var addSqlParams = [
-        floor,
+        id,
         getObj.post_id,
-        getObj.reply_content,
-        getObj.reply_layer,
         getObj.user_id,
-        getObj.user_name,
-        postTime.format('YYYY-MM-DD HH:mm:ss')];
+        floor,
+        getObj.is_reference,
+        getObj.reference_id,
+        getObj.content,
+        ];
     connection.query(addSql, addSqlParams, function (err, result) {
         if (err) {
             console.log('Insert Error ', err.message);
@@ -167,7 +166,7 @@ app.post('/forum/reply/create', function createPost(req, res) {
 //删除回复请求
 app.post('/forum/reply/delete', function deletePost(req, res) {
     var getObj = req.body;
-    var updSql = 'UPDATE postDetail SET reply_num=reply_num-1';
+    var updSql = 'UPDATE post SET reply_num=reply_num-1';
     connection.query(updSql, function (err, result) {
         if (err) {
             res.json(
@@ -176,10 +175,9 @@ app.post('/forum/reply/delete', function deletePost(req, res) {
                 });
         }
     })
-    var delSql = 'DELETE FROM reply WHERE post_id = ? floor_num=?';
+    var delSql = 'DELETE FROM reply WHERE id = ? ';
     var delSqlParams = [
-        getObj.post_id,
-        getObj.floor_num
+        getObj.id
     ];
     connection.query(delSql, delSqlParams, function (err, result) {
         if (err) {
@@ -209,9 +207,9 @@ app.post('/forum/post/detail', function postDetail(req, res) {
         post:'',
         replies:''
     }
-    var sltSql = 'SELECT title, type, user_id, user_name, content, view_num, reply_num, favor_num,dislike_num,floor_num,time_stamp FROM postDetail WHERE post_id =?';
+    var sltSql = 'SELECT title, type, user_id, user_name, content, view_num, reply_num,floor_num, favor_num,FROM_UNIXTIME(create_date) as time_stamp FROM post WHERE id =?';
     var sltSqlParams = [
-        getObj.post_id
+        getObj.id
        ];
     connection.query(sltSql, sltSqlParams, function (err, result) {
         if (err) {
@@ -225,7 +223,7 @@ app.post('/forum/post/detail', function postDetail(req, res) {
             postDetail.post = result;
         }
     })
-    var sltSql2 = 'SELECT floor_num, reply_content, reply_layer, user_id, user_name, time_stamp FROM reply WHERE post_id =?';
+    var sltSql2 = 'SELECT level, content, user_id, user_name,is_reference,reference_id, FROM_UNIXTIME(create_date) as time_stamp FROM reply WHERE post_id =?';
     
     connection.query(sltSql2, sltSqlParams, function (err, result) {
       
@@ -248,7 +246,7 @@ app.post('/forum/post/detail', function postDetail(req, res) {
 
 
 
-var server = app.listen(3000,'192.168.50.106' ,function () {
+var server = app.listen(3000,function () {
 
     var host = server.address().address;
     var port = server.address().port;
