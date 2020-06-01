@@ -38,7 +38,7 @@ app.post('/forum/post/create', function createPost(req, res) {
     var postTime = moment();
     var postIdArr = [postTime.format('YYYYMMDDHHmmss'), getObj.user_id];
     var id = postIdArr.join();
-    var addSql = 'INSERT INTO post(id,title, type, user_id,user_name content, view_num, reply_num,floor_num,favor_num) VALUES(?,?,?,?,?,?,?,?)';
+    var addSql = 'INSERT INTO post(id,title,type,user_id,user_name,content) VALUES(?,?,?,?,?,?)';
     var addSqlParams = [
         id,
         getObj.post_title,
@@ -46,9 +46,7 @@ app.post('/forum/post/create', function createPost(req, res) {
         getObj.user_id,
         getObj.user_name,
         getObj.post_content,
-        0,
-        0,
-        0,];
+       ];
     connection.query(addSql, addSqlParams, function (err, result) {
         if (err) {
             console.log('Insert Error ', err.message);
@@ -140,6 +138,7 @@ app.post('/forum/reply/create', function createPost(req, res) {
         id,
         getObj.post_id,
         getObj.user_id,
+        getObj.user_name,
         floor,
         getObj.is_reference,
         getObj.reference_id,
