@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }))
 app.post('/forum/post/list', async (req,res)=>{
     console.log('收到请求')
     console.log(req.body)
-    let data = await getData(req.body.num)
+    let data = await getData(req.body.type,req.body.num)
     console.log(data)
     res.send(data)
 })
@@ -35,6 +35,10 @@ const connection = mysql.createConnection({
 })
 
 connection.connect()
+
+connection.query('select * from post',(err,rows,fields)=>{
+    console.log("All Data:",rows)
+})
 
 /*
 connection.query('ALTER TABLE post ADD FULLTEXT INDEX ft_index (title,content);',(err,rows,fileds)=>{
@@ -64,15 +68,18 @@ for(let i=0;i<20;i++){
 
 //每一次取数据取100条，预先储存
 //使不用每一次刷新都重复访问数据库
-var preparedData = []
+var preparedPostData = []
+var preparedAnceData = []
 var preparedSearchData = []
 var searchPage = -1
 var lastKeywords = [];
 
 //查询最新更新（四小时以内）的帖子，取前100
 const sqlForGetLatestPost = "select * from post \
-where update_date > (unix_timestamp(now())-14400) \
+where update_date > (unix_timestamp(now())-14400) AND type = ? \
 limit 0,100;";
+
+//
 
 //搜索查询，需要先建立post表中(title,content)的全文索引
 //ALTER TABLE post ADD FULLTEXT INDEX ft_index (title,content);
@@ -81,27 +88,53 @@ where MATCH (title,content) AGAINST (? IN BOOLEAN MODE) \
 order by update_date DESC \
 limit ?,100;"
 
-async function getData(num){
-    if(preparedData.length <= num){ //存量不足
-        return new Promise((resolve,reject)=>{
-            connection.query(sqlForGetLatestPost,(err,rows,fields)=>{
-                if(err){
-                    console.log("获取帖子数据时发生错误:",err);
-                    reject([]);
-                }
-                preparedData = preparedData.concat(rows);
-                let returnData = preparedData.slice(0,num);
-                preparedData = preparedData.slice(num);
-                console.log("preparedData剩下：",preparedData.length);
-                resolve(returnData);
-            })
-        });
+async function getData(type, num){
+    if(type == 0){
+        if(preparedAnceData.length <= num){ //存量不足
+            return new Promise((resolve,reject)=>{
+                connection.query(sqlForGetLatestPost,[type],(err,rows,fields)=>{
+                    if(err){
+                        console.log("获取帖子数据时发生错误:",err);
+                        reject([]);
+                    }
+                    console.log("获取的rows:",rows);
+                    preparedAnceData = preparedAnceData.concat(rows);
+                    let returnData = preparedAnceData.slice(0,num);
+                    preparedAnceData = preparedAnceData.slice(num);
+                    console.log("preparedData剩下：",preparedAnceData.length);
+                    resolve(returnData);
+                })
+            });
+        }
+        else{ //存量充足
+            let returnData = preparedAnceData.slice(0,num);
+            preparedAnceData = preparedAnceData.slice(num);
+            console.log("preparedData剩下：",preparedAnceData.length);
+            return returnData;
+        }
     }
-    else{ //存量充足
-        let returnData = preparedData.slice(0,num);
-        preparedData = preparedData.slice(num);
-        console.log("preparedData剩下：",preparedData.length);
-        return returnData;
+    else if(type == 1){
+        if(preparedPostData.length <= num){ //存量不足
+            return new Promise((resolve,reject)=>{
+                connection.query(sqlForGetLatestPost,[type],(err,rows,fields)=>{
+                    if(err){
+                        console.log("获取帖子数据时发生错误:",err);
+                        reject([]);
+                    }
+                    preparedPostData = preparedPostData.concat(rows);
+                    let returnData = preparedPostData.slice(0,num);
+                    preparedPostData = preparedPostData.slice(num);
+                    console.log("preparedData剩下：",preparedPostData.length);
+                    resolve(returnData);
+                })
+            });
+        }
+        else{ //存量充足
+            let returnData = preparedPostData.slice(0,num);
+            preparedPostData = preparedPostData.slice(num);
+            console.log("preparedData剩下：",preparedPostData.length);
+            return returnData;
+        }
     }
 }
 
