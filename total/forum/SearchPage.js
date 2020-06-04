@@ -157,25 +157,17 @@ class SearchPage extends React.Component {
     _renderItem = (item, index) => {
         return (
             <TouchableOpacity
-                onPress={(event) => { this.props.navigation.navigate('PostDetail', { post_id: item.id }) }}
+                onPress={(event) => { this.props.navigation.navigate('PostDetail', { post_id: item.post_id }) }}
                 activeOpacity={0.7}
             >
                 <View style={styles.post}>
                     <Text style={styles.postHeader}>
-                        <Text>{`#${item.type==0?'水贴':'公告'}#`}</Text>
-                        {this._extraKeyWords(item.title)}
+                        <Text>{this._extraKeyWords(item.post_title)}</Text>
                     </Text>
-                    <Text style={styles.postDate}>
-                        {this._formatDateString(item.update_date)}
-                    </Text>
-                    <Text style={styles.postContent}>
-                        <Text style={styles.poster}>{`${item.user_id}:`}</Text>
+                    <Text style={styles.postBody}>
+                        <Text style={styles.poster}>{`${item.user_name}:`}</Text>
                         {this._extraKeyWords(item.content)}
                     </Text>
-                    <View style={styles.postView}>
-                        <Feather name='eye' color='black' size={styles.postView.height - 5} />
-                        <Text style={{ height: styles.postView.height, paddingLeft: 5, fontSize: styles.postView.height - 5 }}>{item.view_num}</Text>
-                    </View>
                 </View>
             </TouchableOpacity>
         );
@@ -268,39 +260,24 @@ const styles = StyleSheet.create({
         textAlignVertical: 'center',
         textAlign: 'center',
     },
-    post: {
-        flexDirection: 'column',
-        height: 300,
-        backgroundColor: '#DCDCDC',
-        paddingLeft: 10,
-        paddingRight: 10,
-    },
-    poster: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        fontStyle: 'italic',
-        color: '#1E90FF'
-    },
-    postHeader: {
-        height: 60,
-        fontSize: 36,
-        paddingTop: 20,
-    },
-    postContent: {
-        fontSize: 24,
-        height: 180,
-    },
-    postDate: {
-        height: 20,
-        fontSize: 16,
-        textAlignVertical: 'center',
-    },
-    postView: {
-        height: 25,
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-    },
+	post: {
+		flexDirection: 'column',
+		height: 100,
+		backgroundColor: '#FFFFFF',
+		paddingLeft: 10,
+		paddingRight: 10,
+	},
+	postHeader: {
+		height: 50,
+		fontSize: 20,
+		fontWeight:"bold",
+		paddingBottom:10,
+		paddingTop:10,
+	},
+	postBody: {
+		height: 30,
+		fontSize: 12,
+	},
     pageTail: {
         fontSize: 12
     },
