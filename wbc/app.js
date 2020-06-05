@@ -33,14 +33,14 @@ app.all('*', function (req, res, next) {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 //创建帖子请求
-app.post('/forum/post/create', function createPost(req, res) {
+app.post('/forum/post/create/', function createPost(req, res) {
     var getObj = req.body;
-    var postTime = moment();
-    var postIdArr = [postTime.format('YYYYMMDDHHmmss'), getObj.user_id];
-    var id = postIdArr.join();
-    var addSql = 'INSERT INTO post(id,title,type,user_id,user_name,content) VALUES(?,?,?,?,?,?)';
+   /* var postTime = moment();
+    var postIdArr = [postTime.format('YYYYMMDDHHmmss'),getObj.user_id];
+    var id = postTime.format('YYYYMMDDHHmmss') + getObj.user_id;
+    console.log(id);*/
+    var addSql = 'INSERT INTO post(title,type,user_id,user_name,content) VALUES(?,?,?,?,?)';
     var addSqlParams = [
-        id,
         getObj.post_title,
         getObj.post_type,
         getObj.user_id,
@@ -59,7 +59,7 @@ app.post('/forum/post/create', function createPost(req, res) {
             console.log('Insert Success');
             res.json(
                 {
-                    state: 'Y', post_id: id
+                    state: 'Y'
                 });
         }
     })
@@ -100,66 +100,51 @@ app.post('/forum/post/delete', function deletePost(req, res) {
     })
 })
 
+
+
+
 //创建回复请求
 app.post('/forum/reply/create', function createPost(req, res) {
     var getObj = req.body;
     var postTime = moment();
-    var floor ;
-    var sltSql = 'SELECT floor_num FROM post WHERE id =?';
-    var sltSqlParams = [
-        getObj.id
-    ];
-    connection.query(sltSql, sltSqlParams, function (err, result) {
-        if (err) {
-            res.json(
-                {
-                    state: 'N'
-                });
-        }
-        else {
-            floor = result.floor_num+1;
-        }
-    })
-    var replyIdArr = [getObj.post_id, floor];
-    var id = replyIdArr.join();
     var updSql = 'UPDATE post SET floor_num=floor_num+1,reply_num=reply_num+1';
-    connection.query(updSql, function (err, result) {
-        if (err) {
-            res.json(
-                {
-                    state: 'N'
-                });
-        }
+        connection.query(updSql, function (err, result) {
+            if (err) {
+                res.json(
+                    {
+                        state: 'N'
+                    });
+            }
     })
 
+    
+            var addSql = 'INSERT INTO reply(post_id, user_id,user_name,floor,is_reference,reference_id,content) VALUES(?,?,?,?,?,?,?)';
+            var addSqlParams = [
+                getObj.id,
+                getObj.user_id,
+                getObj.user_name,
+                getObj.floor_num + 1,
+                getObj.is_reference,
+                getObj.reference_id,
+                getObj.content,
+            ];
+            connection.query(addSql, addSqlParams, function (err, result) {
+                if (err) {
+                    console.log('Insert Error ', err.message);
+                    res.json(
+                        {
+                            state: 'N'
+                        });
+                }
+                else {
+                    console.log('Insert Success');
+                    res.json(
+                        {
+                            state: 'Y'
+                        });
+                }
+            })
 
-    var addSql = 'INSERT INTO reply(id, post_id, user_id,user_name,level,is_reference,reference_id,content) VALUES(?,?,?,?,?,?,?,?)';
-    var addSqlParams = [
-        id,
-        getObj.post_id,
-        getObj.user_id,
-        getObj.user_name,
-        floor,
-        getObj.is_reference,
-        getObj.reference_id,
-        getObj.content,
-        ];
-    connection.query(addSql, addSqlParams, function (err, result) {
-        if (err) {
-            console.log('Insert Error ', err.message);
-            res.json(
-                {
-                    state: 'N'
-                });
-        }
-        else {
-            console.log('Insert Success');
-            res.json(
-                {
-                    state: 'Y'
-                });
-        }
-    })
 })
 
 //删除回复请求
@@ -178,7 +163,7 @@ app.post('/forum/reply/delete', function deletePost(req, res) {
     var delSqlParams = [
         getObj.id
     ];
-    connection.query(delSql, delSqlParams, function (err, result) {
+     connection.query(delSql, delSqlParams, function (err, result) {
         if (err) {
             console.log('Delete Error ', err.message);
             res.json(
@@ -187,7 +172,7 @@ app.post('/forum/reply/delete', function deletePost(req, res) {
                 });
         }
         else {
-            console.log('Delete Success ', err.message);
+            console.log('Delete Success ');
             res.json(
                 {
                     state: 'Y'
@@ -206,7 +191,8 @@ app.post('/forum/post/detail', function postDetail(req, res) {
         post:'',
         replies:''
     }
-    var sltSql = 'SELECT title, type, user_id, user_name, content, view_num, reply_num,floor_num, favor_num,FROM_UNIXTIME(create_date) as time_stamp FROM post WHERE id =?';
+    
+    var sltSql = "SELECT title, type, user_id, user_name, content, view_num, reply_num,floor_num, favor_num, DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s')  as time_stamp FROM post WHERE id =?;	";
     var sltSqlParams = [
         getObj.id
        ];
@@ -219,10 +205,13 @@ app.post('/forum/post/detail', function postDetail(req, res) {
         }
         else
         {
-            postDetail.post = result;
+            var dataString = JSON.stringify(result);
+            var data = JSON.parse(dataString);
+            postDetail.post = data;
+            console.log(postDetail.post)
         }
     })
-    var sltSql2 = 'SELECT level, content, user_id, user_name,is_reference,reference_id, FROM_UNIXTIME(create_date) as time_stamp FROM reply WHERE post_id =?';
+    var sltSql2 = "SELECT id, floor, content, user_id, user_name,is_reference,reference_id, DATE_FORMAT(create_date,' % Y -%m -%d % H:%i:%s')  as time_stamp FROM reply WHERE post_id =?";
     
     connection.query(sltSql2, sltSqlParams, function (err, result) {
       
@@ -234,8 +223,16 @@ app.post('/forum/post/detail', function postDetail(req, res) {
         }
         else {
             postDetail.state = 'Y';
-            postDetail.replies = result;
-            res.json(postDetail);
+            var dataString2 = JSON.stringify(result);
+            var data2 = JSON.parse(dataString2);
+            postDetail.replies = data2;
+            res.json(
+                {
+                    state: postDetail.state,
+                    post: postDetail.post,
+                    replies: postDetail.replies
+                }
+            );
         }
     })
 
@@ -245,7 +242,7 @@ app.post('/forum/post/detail', function postDetail(req, res) {
 
 
 
-var server = app.listen(3000,function () {
+var server = app.listen(8088,function () {
 
     var host = server.address().address;
     var port = server.address().port;
