@@ -12,7 +12,7 @@ connection.connect()
 
 app.user('/forum/user/block', function banUser(req, res)){
     var getObj = req.body;
-    var updSql = 'UPDATE user SET blocked=TURE';
+    var updSql = 'UPDATE user SET state=1';
     connection.query(updSql, function (err, result) {
         if (err) {
             res.json(
@@ -22,13 +22,14 @@ app.user('/forum/user/block', function banUser(req, res)){
         }
     })
 
-    var addSql = 'INSERT INTO blockedList(userID, startTime, endTime, reason, administrator) VALUES(?, ?, ?, ?, ?)';
+    var addSql = 'INSERT INTO blackList(id, reply_id, user_id, type, create_date, update_date) VALUES(?, ?, ?, ?, ?, ?)';
     var addSqlParams = [
-        userId,
-        getObj.startTime,
-        getObj.endTime,
-        getObj.reson,
-        getObj.administrator];
+        id,
+        getObj.reply_id,
+        getObj.user_id,
+        getObj.type,
+        getObj.create_date,
+        getObj.update_date];
     connection.query(addSql, addSqlParams, function (err, result)){
         if (err) {
             console.log('Insert Error ', err.message);
@@ -49,7 +50,7 @@ app.user('/forum/user/block', function banUser(req, res)){
 
 app.user('/forum/user/deblock', function banUser(req, res)){
     var getObj = req.body;
-    var updSql = 'UPDATE user SET blocked=FALSE';
+    var updSql = 'UPDATE user SET state=0';
     connection.query(updSql, function (err, result) {
         if (err) {
             res.json(
@@ -58,9 +59,9 @@ app.user('/forum/user/deblock', function banUser(req, res)){
                 });
         }
     })
-    var delSql = 'DELETE FROM blockedList WHERE userId = ?';
+    var delSql = 'DELETE FROM blackList WHERE user_id = ?';
     var delSqlParam = [
-        getObj.userId
+        getObj.user_id
     ];
     connection.query(delSql, delSqlParams, function (err, result) {
         if (err) {
