@@ -22,9 +22,9 @@ export default function post1({ navigation })
   'favor_num':0,'dislike_num':0,'time_stamp':'2020-05-05 19:00:01'}*/
   let reply_floor={'floor_num':'','post_id':'2'};
   let reply_reply=
-  {'id':post_id.id,'content':reply_content,'reference_id':re_floor,'is_reference':1,'user_id':'123456','user_name':'用户1','floor_num':post_content.floor_num};
+  {'id':post_id.id,'content':reply_content,'reference_name':re_floor,'is_reference':1,'user_id':'123456','user_name':'用户1','floor_num':post_content.floor_num};
   let reply_post=
-  {'id':post_id.id,'content':reply_content,'reference_id':null,'is_reference':0,'user_id':'123456','user_name':'用户1','floor_num':post_content.floor_num};
+  {'id':post_id.id,'content':reply_content,'reference_name':null,'is_reference':0,'user_id':'123456','user_name':'用户1','floor_num':post_content.floor_num};
   _keyExtractor=(item,index)=>item.floor_num;
 
   //请求帖子详情的数据
@@ -162,7 +162,7 @@ return(
           keyExtractor={this._keyExtractor}
       renderItem={({item}) =><View style={{paddingBottom:10}}>
           
-      <Text style={styles.reply_user}>{item.floor}楼: {item.user_name}  {item.is_reference==true?<Text>回复  {item.reference_id}楼</Text>:""}  </Text>
+      <Text style={styles.reply_user}>{item.floor}楼: {item.user_name}  {item.is_reference==true?<Text>回复  {item.reference_name}</Text>:""}  </Text>
       <Text fontSize={10} >{item.time_stamp}</Text>
       <Text style={styles.replies}>{item.content}</Text>
       <View style={{flex:1, flexDirection:'row',justifyContent:'flex-end',paddingRight:25}}>
@@ -200,8 +200,8 @@ return(
           }
           else
           {
-          setRe_floor(item.floor)
-          if(re_floor==item.floor)
+          setRe_floor(item.reference_name)
+          if(re_floor==item.reference_name)
           {
           setPost_content({'floor_num':post_content.floor_num+1})
           fetch('http://192.168.50.11:8088/forum/reply/create/',{
