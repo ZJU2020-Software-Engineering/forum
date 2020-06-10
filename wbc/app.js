@@ -3,6 +3,8 @@ var mysql = require('mysql');
 var express = require('express');
 var bodyParser = require('body-parser');
 var moment = require('moment');
+var multer = require('multer');
+var fs = require('fs');
 moment.locale('zh-cn');
 
 var connection = mysql.createConnection({
@@ -56,7 +58,7 @@ app.post('/forum/post/create/', function createPost(req, res) {
                 });
         }
         else {
-            console.log('Insert Success');
+            console.log('Insert Success123');
             res.json(
                 {
                     state: 'Y'
@@ -65,8 +67,15 @@ app.post('/forum/post/create/', function createPost(req, res) {
     })
 })
 
+//创建帖子图片请求
+app.post('/forum/post/createpic/', function createPostPic(req, res) {
+    console.log('ok');
+    var file = req.file;
+    console.log(file);
+})
+
 //删除帖子请求
-app.post('/forum/post/delete', function deletePost(req, res) {
+app.post('/forum/post/delete/', function deletePost(req, res) {
     var getObj = req.body;
     var delSql = 'DELETE FROM post WHERE id = ?';
     var delSqlParams = [
@@ -104,7 +113,7 @@ app.post('/forum/post/delete', function deletePost(req, res) {
 
 
 //创建回复请求
-app.post('/forum/reply/create', function createPost(req, res) {
+app.post('/forum/reply/create/', function createPost(req, res) {
     var getObj = req.body;
     var postTime = moment();
     var updSql = 'UPDATE post SET floor_num=floor_num+1,reply_num=reply_num+1';
@@ -118,14 +127,14 @@ app.post('/forum/reply/create', function createPost(req, res) {
     })
 
     
-            var addSql = 'INSERT INTO reply(post_id, user_id,user_name,floor,is_reference,reference_id,content) VALUES(?,?,?,?,?,?,?)';
+            var addSql = 'INSERT INTO reply(post_id, user_id,user_name,floor,is_reference,reference_name,content) VALUES(?,?,?,?,?,?,?)';
             var addSqlParams = [
                 getObj.id,
                 getObj.user_id,
                 getObj.user_name,
                 getObj.floor_num + 1,
                 getObj.is_reference,
-                getObj.reference_id,
+                getObj.reference_name,
                 getObj.content,
             ];
             connection.query(addSql, addSqlParams, function (err, result) {
@@ -148,7 +157,7 @@ app.post('/forum/reply/create', function createPost(req, res) {
 })
 
 //删除回复请求
-app.post('/forum/reply/delete', function deletePost(req, res) {
+app.post('/forum/reply/delete/', function deletePost(req, res) {
     var getObj = req.body;
     var updSql = 'UPDATE post SET reply_num=reply_num-1';
     connection.query(updSql, function (err, result) {
@@ -184,7 +193,7 @@ app.post('/forum/reply/delete', function deletePost(req, res) {
 
 
 //帖子详情请求
-app.post('/forum/post/detail', function postDetail(req, res) {
+app.post('/forum/post/detail/', function postDetail(req, res) {
     var getObj = req.body;
     var postDetail = {
         state:'',
@@ -211,7 +220,7 @@ app.post('/forum/post/detail', function postDetail(req, res) {
             console.log(postDetail.post)
         }
     })
-    var sltSql2 = "SELECT id, floor, content, user_id, user_name,is_reference,reference_id, DATE_FORMAT(create_date,' % Y -%m -%d % H:%i:%s')  as time_stamp FROM reply WHERE post_id =?";
+    var sltSql2 = "SELECT id, floor, content, user_id, user_name,is_reference,reference_id, reference_name,DATE_FORMAT(create_date,' % Y -%m -%d % H:%i:%s')  as time_stamp FROM reply WHERE post_id =?";
     
     connection.query(sltSql2, sltSqlParams, function (err, result) {
       
@@ -242,11 +251,11 @@ app.post('/forum/post/detail', function postDetail(req, res) {
 
 
 
-var server = app.listen(8088,function () {
+    var server = app.listen(8088, function () {
 
-    var host = server.address().address;
-    var port = server.address().port;
+        var host = server.address().address;
+        var port = server.address().port;
 
-    console.log("应用实例，访问地址为 http://%s:%s", host, port);
+        console.log("应用实例，访问地址为 http://%s:%s", host, port);
 
-})
+    })
